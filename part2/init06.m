@@ -12,6 +12,7 @@ clc;
 travel_gain = 1; %
 
 
+
 %% Physical constants
 m_h = 0.4; % Total mass of the motors.
 m_g = 0.03; % Effective mass of the helicopter.
@@ -24,8 +25,8 @@ J_p = 2 * ( m_h/2 * l_h * l_h);   % Moment of interia for pitch
 J_t = 2 * m_h * l_a *l_a;         % Moment of interia for travel
 
 % Identified voltage sum and difference
-V_s_eq = 6.2; % Identified equilibrium voltage sum.
-V_d_eq = 0.3; % Identified equilibrium voltage difference.
+V_s_eq = 6.5; % Identified equilibrium voltage sum.
+V_d_eq = 0.52; % Identified equilibrium voltage difference.
 
 % Model parameters
 K_p = m_g*9.81; % Force to lift the helicopter from the ground.
