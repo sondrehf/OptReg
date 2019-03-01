@@ -5,14 +5,16 @@
 %% Initialization and model definition
 init06; % Change this to the init file corresponding to your helicopter
 
+global lambda_t alpha beta mx N
+
 %CONSTANTS
 lambda_t = 2*pi/3; alpha = 0.2; beta = 20;
 
 
 % Discrete time system model. x = [lambda r p p_dot]'
 delta_t	= 0.25; % sampling time
-A1 = [1 delta_t 0 0 0 0;
-    0 1 -K_2*delta_t 0 0 0;
+A1 = [1  delta_t 0 0 0 0;
+      0 1 -K_2*delta_t 0 0 0;
     0 0 1 delta_t 0 0;
     0 0 -K_1*K_pp*delta_t 1-K_1*K_pd*delta_t 0 0;
     0 0 0 0 1 delta_t;
@@ -40,13 +42,13 @@ z  = zeros(N*mx+M*mu,1);                % Initialize z for the whole horizon
 z0 = z;                                 % Initial value for optimization
 
 % Bounds
-ul 	    = -30*pi/180;                   % Lower bound on control
-uu 	    = 30*pi/180;                   % Upper bound on control
+ul 	    = [-30*pi/180; -Inf];                   % Lower bound on control
+uu 	    = [30*pi/180; Inf];                   % Upper bound on control
 
 xl      = -Inf*ones(mx,1);              % Lower bound on states (no bound)
 xu      = Inf*ones(mx,1);               % Upper bound on states (no bound)
-xl(3)   = ul;                           % Lower bound on state x3
-xu(3)   = uu;                           % Upper bound on state x3
+xl(3)   = ul(1);                           % Lower bound on state x3
+xu(3)   = uu(1);                           % Upper bound on state x3
 
 % Generate constraints on measurements and inputs
 [vlb,vub]       = gen_constraints(N,M,xl,xu,ul,uu); % hint: gen_constraints
@@ -77,9 +79,9 @@ beq = zeros(size(Aeq, 1),1);            % Generate b
 beq(1:mx) = A1*x0; 
 
 %% Solve QP problem with linear model
-object_fun = @(z) (z'*Q*z);
-
-opt = optimoptions('fmincon', 'Algorithm', 'sqp', 'MaxFunEvals', 400000);
+object_fun = @(z) (1/2*z'*Q*z);
+z0(1:mx) = x0;
+opt = optimoptions('fmincon', 'Algorithm', 'sqp', 'MaxFunEvals', 40000);
 tic
 %[z,lambda] = quadprog(Q, c, [], [], Aeq, beq, vlb, vub, x0); % hint: quadprog. Type 'doc quadprog' for more info 
 [z, ZVAL, EXITFLAG] = fmincon(object_fun, z0, [], [], Aeq, beq, vlb, vub, @NONLNCON, opt);
@@ -123,18 +125,51 @@ x6  = [zero_padding; x6; zero_padding];
 Q = diag([100 1 1 1 1 1]);
 R = [1 0; 0 1];
 
+%Plotting the constraint
+[Ceq, C] = NONLNCON(z);
+
+
+%Tuning matrices
 K = dlqr(A1, B1, Q, R); % dlqr - K-matrix for discrete lqr
-K_T = K'; 
+K_T = (K');
 % old 
 t = 0:delta_t:delta_t*(length(u1)-1);
 
 %%Creating struct for simulink input
 input.signals.values = [u1 u2];
 input.time = t;
+input.signals.dimensions = 2;
 x_opt.signals.values = [x1 x2 x3 x4 x5 x6]; 
 x_opt.time = t;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+figure(4)
+plot(1:40, C)
+%% References
+figure(3)
+hold on
+plot(e_ref.time, reshape(e_ref.signals.values(1,1,:),[], 1), 'k', 'DisplayName', 'Elevation ref')
+hold on;
+plot(Elevation.time, Elevation.signals.values*(pi/180), 'b', 'DisplayName', 'Actual Elevation ')
+legend('-DynamicLegend')
+title('References')
+%% Optimal vs actual input
+figure(5)
+plot(t, x1);
+hold on;
+plot(Travel.time, Travel.signals.values, 'r', 'DisplayName', 'Actual travel');
+legend('-DynamicLegend')
+title('Optimal pitch vs actual pitch input (with feedback)')
 
+%%
+figure(6)
+hold on
+plot(Pitch_ref.time, reshape(Pitch_ref.signals.values(1,1,:),[], 1), 'k', 'DisplayName', 'Pitch ref')
+hold on;
+plot(Pitch.time, Pitch.signals.values*(pi/180), 'b', 'DisplayName', 'Actual Pitch ')
+legend('-DynamicLegend')
+title('References')
+
+%% Different optimal states and inputs
 figure(2)
 hold on;
 subplot(511)
@@ -166,7 +201,5 @@ plot(t,x4, color, 'DisplayName', ['q = ', num2str(P1)]),grid
 legend('-DynamicLegend');
 xlabel('tid (s)'),ylabel('pdot')
 axis([0 20 -1 1])
-
-figure; 
-%plot(Travel.time, Travel.signals.values); 
+ 
 
