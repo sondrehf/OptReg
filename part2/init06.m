@@ -5,7 +5,7 @@
 % Updated Spring 2019, Joakim R. Andersen
 
 clear all;
-close all;
+%close all;
 clc;
 
 % The encoder for travel for Helicopter 2 is different from the rest.

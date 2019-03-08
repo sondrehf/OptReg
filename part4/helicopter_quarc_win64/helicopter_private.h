@@ -7,9 +7,9 @@
  *
  * Code generation for model "helicopter".
  *
- * Model version              : 1.202
+ * Model version              : 1.206
  * Simulink Coder version : 8.9 (R2015b) 13-Aug-2015
- * C source code generated on : Fri Mar 01 16:39:15 2019
+ * C source code generated on : Fri Mar 08 15:59:35 2019
  *
  * Target selection: quarc_win64.tlc
  * Note: GRT includes extra infrastructure and instrumentation for prototyping
@@ -24,7 +24,7 @@
 #include "multiword_types.h"
 #include "zero_crossing_types.h"
 
-/* Used by FromWorkspace Block: '<S6>/From Workspace' */
+/* Used by FromWorkspace Block: '<Root>/From Workspace1' */
 #ifndef rtInterpolate
 # define rtInterpolate(v1,v2,f1,f2)    (((v1)==(v2))?((double)(v1)): (((f1)*((double)(v1)))+((f2)*((double)(v2)))))
 #endif

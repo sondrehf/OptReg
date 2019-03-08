@@ -50,6 +50,7 @@ xu      = Inf*ones(mx,1);               % Upper bound on states (no bound)
 xl(3)   = ul(1);                           % Lower bound on state x3
 xu(3)   = uu(1);                           % Upper bound on state x3
 
+
 % Generate constraints on measurements and inputs
 [vlb,vub]       = gen_constraints(N,M,xl,xu,ul,uu); % hint: gen_constraints
 vlb(N*mx+M*mu)  = 0;                    % We want the last input to be zero
@@ -69,9 +70,6 @@ P = [P1 0 ; 0 P2];                     % Input matrix
 Q = gen_q(Q1,P,N,M);                    % Generate Q, hint: gen_q
 c = zeros(N*mx+M*mu,1);                 % Generate c, this is the linear constant term in the QP
 
-% Objective function to be minimized
-color = 'k';
-stairs_color = 'k';
 
 %% Generate system matrixes for linear model
 Aeq = gen_aeq(A1,B1,N,mx,mu);           % Generate A, hint: gen_aeq
@@ -122,13 +120,14 @@ x6  = [zero_padding; x6; zero_padding];
 
 
 %% Plotting
-Q = diag([100 1 1 1 1 1]);
+Q = diag([30 1 30 3 100 1]);
 R = [1 0; 0 1];
 
 %Plotting the constraint
-[Ceq, C] = NONLNCON(z);
-
-
+nonlincon = zeros(length(x1), 1);
+for i = 1: length(x1)
+    nonlincon(i) = alpha*exp(-beta*(x1(i) - lambda_t)^2);
+end
 %Tuning matrices
 K = dlqr(A1, B1, Q, R); % dlqr - K-matrix for discrete lqr
 K_T = (K');
@@ -142,8 +141,7 @@ input.signals.dimensions = 2;
 x_opt.signals.values = [x1 x2 x3 x4 x5 x6]; 
 x_opt.time = t;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-figure(4)
-plot(1:40, C)
+
 %% References
 figure(3)
 hold on
@@ -152,22 +150,108 @@ hold on;
 plot(Elevation.time, Elevation.signals.values*(pi/180), 'b', 'DisplayName', 'Actual Elevation ')
 legend('-DynamicLegend')
 title('References')
-%% Optimal vs actual input
+%% Optimal vs actual input (with feedback)
 figure(5)
-plot(t, x1);
+plot(t, x1, 'b');
 hold on;
-plot(Travel.time, Travel.signals.values, 'r', 'DisplayName', 'Actual travel');
-legend('-DynamicLegend')
-title('Optimal pitch vs actual pitch input (with feedback)')
+grid on;
+plot(Travel.time, Travel.signals.values, 'r');
+shadel = patch([0 5 5 0], [-1 -1 5 5], [0.3 0.6 0.15]);
+set(shadel, 'FaceAlpha', .2);
+shader = patch([17 25 25 17], [-1 -1 5 5], [0.3 0.6 0.15]);
+set(shader, 'FaceAlpha', .2);
+legend('\lambda_{optimal}', '\lambda_{real}');
+xlabel('$t[sec]$', 'Interpreter', 'Latex');
+ylabel('\lambda[rad]')
+title('Optimal $\lambda$ vs actual $\lambda$ (without feedback)', 'Interpreter', 'Latex');
+xlim([0 25])
+
+figure(6)
+plot(t, x3, 'b');
+hold on;
+grid on;
+plot(Pitch.time, Pitch.signals.values, 'r');
+shadel = patch([0 5 5 0], [-1 -1 5 5], [0.3 0.6 0.15]);
+set(shadel, 'FaceAlpha', .2);
+shader = patch([17 25 25 17], [-1 -1 5 5], [0.3 0.6 0.15]);
+set(shader, 'FaceAlpha', .2);
+legend('p_{optimal}', 'p_{real}');
+xlabel('$t[sec]$', 'Interpreter', 'Latex');
+ylabel('p[rad]')
+title('Optimal $p$ vs actual $p$ (with feedback)', 'Interpreter', 'Latex');
+xlim([0 25])
+ylim([-0.5 0.6])
+
+figure(7)
+plot(t, x5, 'b');
+hold on;
+grid on;
+plot(Elevation.time, Elevation.signals.values, 'r');
+plot(t, nonlincon, '--k')
+shadel = patch([0 5 5 0], [-1 -1 5 5], [0.3 0.6 0.15]);
+set(shadel, 'FaceAlpha', .2);
+shader = patch([17 25 25 17], [-1 -1 5 5], [0.3 0.6 0.15]);
+set(shader, 'FaceAlpha', .2);
+legend('e_{optimal}', 'e_{real}');
+xlabel('$t[sec]$', 'Interpreter', 'Latex');
+ylabel('e[rad]')
+title('Optimal $e$ vs actual $e$ (with feedback)', 'Interpreter', 'Latex');
+xlim([0 25])
+ylim([-0.2 0.3])
+
+%% Optimal vs actual input (without feedback)
+figure(5)
+plot(t, x1, 'b');
+hold on;
+grid on;
+plot(Travel.time, Travel.signals.values, 'r');
+shadel = patch([0 5 5 0], [-1 -1 5 5], [0.3 0.6 0.15]);
+set(shadel, 'FaceAlpha', .2);
+shader = patch([17 25 25 17], [-1 -1 5 5], [0.3 0.6 0.15]);
+set(shader, 'FaceAlpha', .2);
+legend('\lambda_{optimal}', '\lambda_{real}');
+xlabel('$t[sec]$', 'Interpreter', 'Latex');
+ylabel('\lambda[rad]')
+title('Optimal $\lambda$ vs actual $\lambda$ (without feedback)', 'Interpreter', 'Latex');
+xlim([0 25])
+
+figure(6)
+plot(t, x3, 'b');
+hold on;
+grid on;
+plot(Pitch.time, Pitch.signals.values, 'r');
+shadel = patch([0 5 5 0], [-1 -1 5 5], [0.3 0.6 0.15]);
+set(shadel, 'FaceAlpha', .2);
+shader = patch([17 25 25 17], [-1 -1 5 5], [0.3 0.6 0.15]);
+set(shader, 'FaceAlpha', .2);
+legend('p_{optimal}', 'p_{real}');
+xlabel('$t[sec]$', 'Interpreter', 'Latex');
+ylabel('p[rad]')
+title('Optimal $p$ vs actual $p$ (without feedback)', 'Interpreter', 'Latex');
+xlim([0 25])
+ylim([-0.5 0.6])
+
+figure(7)
+plot(t, x5, 'b');
+hold on;
+grid on;
+plot(Elevation.time, Elevation.signals.values, 'r');
+plot(t, nonlincon, '--k')
+shadel = patch([0 5 5 0], [-1 -1 5 5], [0.3 0.6 0.15]);
+set(shadel, 'FaceAlpha', .2);
+shader = patch([17 25 25 17], [-1 -1 5 5], [0.3 0.6 0.15]);
+set(shader, 'FaceAlpha', .2);
+legend('e_{optimal}', 'e_{real}', 'e_{nonlinear constraint}');
+xlabel('$t[sec]$', 'Interpreter', 'Latex');
+ylabel('e[rad]')
+title('Optimal $e$ vs actual $e$ (without feedback)', 'Interpreter', 'Latex');
+ylim([-0.2 0.3])
+xlim([0 25])
 
 %%
-figure(6)
-hold on
-plot(Pitch_ref.time, reshape(Pitch_ref.signals.values(1,1,:),[], 1), 'k', 'DisplayName', 'Pitch ref')
-hold on;
-plot(Pitch.time, Pitch.signals.values*(pi/180), 'b', 'DisplayName', 'Actual Pitch ')
-legend('-DynamicLegend')
-title('References')
+figure(1)
+plot(t, x5)
+plot(t, nonlincon)
 
 %% Different optimal states and inputs
 figure(2)

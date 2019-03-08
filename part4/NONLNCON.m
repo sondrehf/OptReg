@@ -1,4 +1,4 @@
-function [Ceq, C] = NONLNCON(z)
+function [C, Ceq] = NONLNCON(z)
 global alpha beta lambda_t mx N
 C = zeros(N,1);
 for k=1:N

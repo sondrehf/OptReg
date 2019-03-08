@@ -90,7 +90,7 @@ COMPILER_TOOL_CHAIN = vcx64
 
 
 MODEL                = helicopter
-MODULES              = RTGETINF.C RTGETNAN.C helicopter_data.c helicopter_main.c rt_nonfinite.c 
+MODULES              = helicopter_data.c helicopter_main.c rtGetInf.c rtGetNaN.c rt_nonfinite.c 
 MAKEFILE             = helicopter.mk
 MATLAB_ROOT          = C:\Program Files\MATLAB\R2015b
 ALT_MATLAB_ROOT      = C:\PROGRA~1\MATLAB\R2015b
@@ -129,7 +129,7 @@ RELATIVE_PATH_TO_ANCHOR   = ..
 MODELREF_TARGET_TYPE      = NONE
 
 #-- Support for parallel builds
-START_DIR         = D:\OptReg-master_lagret150219\part4
+START_DIR         = C:\Users\jonasasa\Desktop\OptReg-master\part4
 MASTER_ANCHOR_DIR = 
 
 #-- Support multi-instance code

@@ -3,7 +3,7 @@
 % Updated spring 2018, Andreas L. Flåten
 
 %% Initialization and model definition
-init09; % Change this to the init file corresponding to your helicopter
+init06; % Change this to the init file corresponding to your helicopter
 
 % Model
 A_c = [0 1 0 0;
@@ -57,15 +57,14 @@ Q1(1,1) = 2;                            % Weight on state x1
 Q1(2,2) = 0;                            % Weight on state x2
 Q1(3,3) = 0;                            % Weight on state x3
 Q1(4,4) = 0;                            % Weight on state x4
-P1 = 0.1;                                % Weight on input
-Q = gen_q(Q1,P1,N,M);                                  % Generate Q, hint: gen_q
-c = zeros(N*mx+M*mu, 1); % (??????)                                 % Generate c, this is the linear constant term in the QP
+P1 = 10;                               % Weight on input
+Q = gen_q(Q1,P1,N,M);                   % Generate Q, hint: gen_q
+c = zeros(N*mx+M*mu, 1);                % Generate c, this is the linear constant term in the QP
 
 %% Generate system matrixes for linear model
-Aeq = gen_aeq(A1,B1,N,mx,mu);             % Generate A, hint: gen_aeq
-beq = zeros(size(Aeq,1),1); % (??????) % Generate b
-beq(1:mx) = A1*x0; % (?????)
-
+Aeq = gen_aeq(A1,B1,N,mx,mu);          % Generate A, hint: gen_aeq
+beq = zeros(size(Aeq,1),1);            % Generate b
+beq(1:mx) = A1*x0;
 %% Solve QP problem with linear model
 tic
 [z,lambda] = quadprog(Q,c,[],[],Aeq,beq,vlb,vub,x0); % hint: quadprog. Type 'doc quadprog' for more info 
@@ -92,13 +91,66 @@ zero_padding = zeros(num_variables,1);
 unit_padding  = ones(num_variables,1);
 
 u   = [zero_padding; u; zero_padding];
-x1  = [pi*unit_padding; x1; zero_padding];
+x1  = [pi*unit_padding; x1; zero_padding]; % lambda
 x2  = [zero_padding; x2; zero_padding];
-x3  = [zero_padding; x3; zero_padding];
+x3  = [zero_padding; x3; zero_padding]; % Pitch
 x4  = [zero_padding; x4; zero_padding];
 
-%% Plotting
+
+%% To workspace
 t = 0:delta_t:delta_t*(length(u)-1);
+input.signals.values = u;
+input.time = t;
+input.signals.dimensions = 1;
+
+%% Nice plotting
+%Input
+figure(3)
+plot(t, u, 'DisplayName', ['q = ', num2str(P1)])
+hold on;
+grid on;
+
+title('Input for different input weights', 'Interpreter', 'Latex')
+xlabel('t[sec]', 'Interpreter', 'Latex')
+ylabel('p[rad]', 'Interpreter', 'Latex')
+legend('-DynamicLegend')
+xlim auto
+ylim auto
+
+%% Lambda
+figure(4)
+plot(Travel.time, Travel.signals.values, 'DisplayName', ['\lambda_{q = ', num2str(P1), '}'])
+hold on;
+grid on;
+
+title('$\lambda$ for different input weights', 'Interpreter', 'Latex')
+xlabel('t[sec]', 'Interpreter', 'Latex')
+ylabel('$\lambda$[rad]', 'Interpreter', 'Latex')
+legend('-DynamicLegend')
+xlim([0 35])
+ylim([-0.3 3.8])
+
+%% Pitch 
+figure(5)
+plot(Pitch.time, Pitch.signals.values, 'DisplayName', ['p_{real, q = ', num2str(P1), '}'])
+hold on;
+plot(t, x3, 'DisplayName', ['p_{optimal, q = ', num2str(P1), '}'])
+grid on;
+
+title('$p$, measurement vs optimal trajectory', 'Interpreter', 'Latex')
+xlabel('t[sec]', 'Interpreter', 'Latex')
+ylabel('$p$[rad]', 'Interpreter', 'Latex')
+legend('-DynamicLegend')
+xlim([0 35])
+
+%%
+shader = patch([17 30 30 17], [0 0 3.5 3.5], [0.3 0.6 0.15]);
+set(shader, 'FaceAlpha', 0.2)
+shadel = patch([0 5 5 0], [0 0 3.5 3.5], [0.3 0.6 0.15]);
+set(shadel, 'FaceAlpha', 0.2)
+set(shadel, 'Annotation', 'off')
+set(shader, 'Annotation', 'off')
+%% ugly Plotting
 
 figure(2)
 subplot(511)
