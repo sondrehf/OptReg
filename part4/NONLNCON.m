@@ -1,3 +1,5 @@
+%% ---- PROBLEM 10.4.3 ---- %%
+%%Implementation of the nonlinear constraint - to be fed into fmincon
 function [C, Ceq] = NONLNCON(z)
 global alpha beta lambda_t mx N
 C = zeros(N,1);
